@@ -16,7 +16,7 @@ services:
       - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:8083
       - --advertise-pandaproxy-addr internal://redpanda:8082,external://localhost:8083
     ports:
-      - "9092:9092"  # Port for local Python script
+      - "9092:9092"
       - "8083:8083"
     volumes:
       - redpanda-data:/var/lib/redpanda/data
@@ -32,8 +32,8 @@ services:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: password
     ports:
-      - "9000:9000" # API Port
-      - "9001:9001" # UI Port
+      - "9000:9000"
+      - "9001:9001"
     volumes:
       - minio-data:/data
     networks:
@@ -49,14 +49,11 @@ services:
     working_dir: /home/jovyan/work
     environment:
       - SPARK_MODE=master
-    # install the libraries immediately on startup
-    entrypoint: >
-      /bin/bash -c "
-      pip install confluent-kafka websockets ultralytics opencv-python-headless;
-      /bin/bash" 
+    # --- CHANGED: Use the stable default command ---
+    command: start-notebook.sh --NotebookApp.token=''
     ports:
-      - "8888:8888" # Jupyter UI
-      - "4040:4040" # Spark UI
+      - "8888:8888"
+      - "4040:4040"
     networks:
       - f1-network
     depends_on:
