@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # 1. The Spine (Redpanda/Kafka)
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:latest
+    container_name: f1-redpanda
+    command:
+      - redpanda start
+      - --smp 1
+      - --memory 1G
+      - --reserve-memory 0M
+      - --overprovisioned
+      - --kafka-addr internal://0.0.0.0:29092,external://0.0.0.0:9092
+      - --advertise-kafka-addr internal://redpanda:29092,external://localhost:9092
+      - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:8083
+      - --advertise-pandaproxy-addr internal://redpanda:8082,external://localhost:8083
+    ports:
+      - "9092:9092"  # Port for your local Python script
+      - "8083:8083"
+    volumes:
+      - redpanda-data:/var/lib/redpanda/data
+    networks:
+      - f1-network
+
+  # 2. The Vault (MinIO/S3)
+  minio:
+    image: minio/minio:latest
+    container_name: f1-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password
+    ports:
+      - "9000:9000" # API Port
+      - "9001:9001" # UI Port
+    volumes:
+      - minio-data:/data
+    networks:
+      - f1-network
+
+  # 3. The Brain (Spark/Jupyter)
+  spark-processor:
+    image: jupyter/pyspark-notebook:latest
+    container_name: f1-spark
+    user: root
+    volumes:
+      - .:/home/jovyan/work
+    working_dir: /home/jovyan/work
+    environment:
+      - SPARK_MODE=master
+    # We install the libraries immediately on startup
+    entrypoint: >
+      /bin/bash -c "
+      pip install confluent-kafka websockets ultralytics opencv-python-headless;
+      /bin/bash" 
+    ports:
+      - "8888:8888" # Jupyter UI
+      - "4040:4040" # Spark UI
+    networks:
+      - f1-network
+    depends_on:
+      - redpanda
+      - minio
+
+networks:
+  f1-network:
+    driver: bridge
+
+volumes:
+  redpanda-data:
+  minio-data:
