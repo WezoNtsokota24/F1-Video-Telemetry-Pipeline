@@ -63,14 +63,15 @@ pitting_events = parsed_stream.filter(
     (col("event_type") == "PIT_ENTRY") | (col("event_type") == "PIT_EXIT")
 )
 
-# --- 5. WRITE STREAM (TO CONSOLE & MINIO) ---.
-# later we will switch this to .format("parquet").save("s3a://f1-data/...")
+# --- 5. WRITE STREAM (TO MINIO/S3) ---
+print("💾 Writing Data to MinIO (Data Lake)...")
 
 query = pitting_events.writeStream \
     .outputMode("append") \
-    .format("console") \
-    .option("truncate", "false") \
+    .format("parquet") \
+    .option("path", "s3a://f1-data/pit_stops") \
+    .option("checkpointLocation", "s3a://f1-data/checkpoints/pit_stops") \
     .start()
 
-print("✅ Strategy Engine Running... Waiting for Pit Stops.")
+print("✅ Pipeline Active. Data is being saved to s3a://f1-data/pit_stops")
 query.awaitTermination()
