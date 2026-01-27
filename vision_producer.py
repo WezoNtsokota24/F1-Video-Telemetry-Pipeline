@@ -5,7 +5,7 @@ import os
 from ultralytics import YOLO
 from confluent_kafka import Producer
 
-# --- 1. CONFIGURATION ---
+# 1. CONFIGURATION 
 TOPIC_NAME = "f1-vision-events"
 # We accept generic vehicles because F1 cars look like "motorcycles" to AI
 VALID_CLASSES = ['car', 'motorcycle', 'truck', 'bus', 'bicycle']
@@ -19,7 +19,7 @@ conf = {
 print("🔌 Connecting to Redpanda...")
 producer = Producer(conf)
 
-# --- 2. SETUP VIDEO & MODEL ---
+# 2. SETUP VIDEO & MODEL 
 video_path = os.path.join(os.path.dirname(__file__), "pitstop.mp4")
 
 print("🧠 Loading AI Model...")
@@ -91,7 +91,7 @@ while True:
                     "bbox": [x1, y1, x2, y2]
                 })
 
-    # --- 3. BUSINESS LOGIC & SENDING ---
+    # 3. BUSINESS LOGIC & SENDING 
     
     # Logic: If car is in zone, we flag it.
     event_type = "TRACK_ACTION"

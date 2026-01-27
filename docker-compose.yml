@@ -49,7 +49,7 @@ services:
     working_dir: /home/jovyan/work
     environment:
       - SPARK_MODE=master
-    # --- CHANGED: Use the stable default command ---
+    # Use the stable default command
     command: start-notebook.sh --NotebookApp.token=''
     ports:
       - "8888:8888"

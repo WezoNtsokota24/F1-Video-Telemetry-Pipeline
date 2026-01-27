@@ -1,18 +1,18 @@
 import os
 import sys
 
-# --- 🛠️ FIX: UNSET PRE-INSTALLED SPARK VARIABLES ---
+# FIX: UNSET PRE-INSTALLED SPARK VARIABLES
 # This prevents the conflict between the Docker Spark and  pip-installed Spark
 os.environ.pop('SPARK_HOME', None)
 os.environ.pop('SPARK_CONF_DIR', None)
 
-# --- NOW IMPORT PYSPARK ---
+# NOW IMPORT PYSPARK 
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_json, col, expr
 from pyspark.sql.types import StructType, StructField, StringType, DoubleType, ArrayType, LongType
 
 
-# --- 1. CONFIGURE SPARK ---
+# 1. CONFIGURE SPARK 
 # We need to download the drivers for Kafka and S3 (MinIO) automatically
 spark = SparkSession.builder \
     .appName("F1-Strategy-Engine") \
@@ -29,7 +29,7 @@ spark = SparkSession.builder \
 
 spark.sparkContext.setLogLevel("WARN")
 
-# --- 2. DEFINE SCHEMA ---
+# 2. DEFINE SCHEMA 
 # This matches the JSON you created in vision_producer.py
 # { "frame_id": 12, "event_type": "PIT_ENTRY", "pit_timer": 4.5 ... }
 schema = StructType([
@@ -40,7 +40,7 @@ schema = StructType([
     StructField("detections", ArrayType(StringType())) # We keep this raw for now
 ])
 
-# --- 3. READ STREAM (FROM REDPANDA) ---
+# 3. READ STREAM (FROM REDPANDA) 
 print("🏎️  Connecting to Redpanda Stream...")
 
 raw_stream = spark.readStream \
@@ -56,14 +56,14 @@ parsed_stream = raw_stream \
     .select(from_json(col("value"), schema).alias("data")) \
     .select("data.*")
 
-# --- 4. ANALYTICS LOGIC ---
+# 4. ANALYTICS LOGIC
 # We only want to save data when the car is ACTUALLY in the pit (or just exiting)
 # 'PIT_ENTRY' or 'PIT_EXIT'. We ignore generic 'TRACK_ACTION' to save space.
 pitting_events = parsed_stream.filter(
     (col("event_type") == "PIT_ENTRY") | (col("event_type") == "PIT_EXIT")
 )
 
-# --- 5. WRITE STREAM (TO MINIO/S3) ---
+# 5. WRITE STREAM (TO MINIO/S3) 
 print("💾 Writing Data to MinIO (Data Lake)...")
 
 query = pitting_events.writeStream \
