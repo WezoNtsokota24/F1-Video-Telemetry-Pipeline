@@ -13,7 +13,7 @@ from pyspark.sql.types import StructType, StructField, StringType, DoubleType, A
 
 
 # 1. CONFIGURE SPARK 
-# We need to download the drivers for Kafka and S3 (MinIO) automatically
+# download the drivers for Kafka and S3 (MinIO) automatically
 spark = SparkSession.builder \
     .appName("F1-Strategy-Engine") \
     .config("spark.jars.packages", 
@@ -30,8 +30,7 @@ spark = SparkSession.builder \
 spark.sparkContext.setLogLevel("WARN")
 
 # 2. DEFINE SCHEMA 
-# This matches the JSON you created in vision_producer.py
-# { "frame_id": 12, "event_type": "PIT_ENTRY", "pit_timer": 4.5 ... }
+
 schema = StructType([
     StructField("frame_id", LongType()),
     StructField("timestamp", DoubleType()),
@@ -41,7 +40,7 @@ schema = StructType([
 ])
 
 # 3. READ STREAM (FROM REDPANDA) 
-print("🏎️  Connecting to Redpanda Stream...")
+print("  Connecting to Redpanda Stream...")
 
 raw_stream = spark.readStream \
     .format("kafka") \
